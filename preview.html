@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cluster Trading Dashboard</title>
+  <style>
+    :root {
+      --bg: #0b0f14;
+      --panel: #121821;
+      --panel-2: #171f2b;
+      --panel-3: #0f141c;
+      --border: #283244;
+      --text: #e8eef9;
+      --muted: #98a4b8;
+      --green: #1ecb81;
+      --red: #ff5d5d;
+      --amber: #ffb547;
+      --blue: #4fa3ff;
+      --shadow: 0 10px 24px rgba(0,0,0,.22);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: linear-gradient(180deg, #0b0f14 0%, #0f141c 100%);
+      color: var(--text);
+    }
+
+    .app {
+      max-width: 1720px;
+      margin: 0 auto;
+      padding: 14px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .title-wrap h1 {
+      margin: 0;
+      font-size: 26px;
+      letter-spacing: -0.02em;
+    }
+
+    .title-wrap p {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      max-width: 860px;
+      line-height: 1.5;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    button, input, select, textarea {
+      border: 1px solid var(--border);
+      background: var(--panel);
+      color: var(--text);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 13px;
+      min-height: 40px;
+    }
+
+    textarea {
+      min-height: 72px;
+      resize: vertical;
+      font-family: inherit;
+    }
+
+    button {
+      cursor: pointer;
+      transition: 0.18s ease;
+      font-weight: 700;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      background: var(--panel-2);
+    }
+
+    .primary-btn { background: linear-gradient(135deg, #162332 0%, #1b2534 100%); }
+    .danger-btn { color: var(--red); }
+    .secondary-btn { color: var(--blue); }
+
+    .notice {
+      margin-bottom: 14px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,181,71,.3);
+      background: rgba(255,181,71,.08);
+      color: #ffd18a;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .cluster {
+      margin-bottom: 14px;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+      background: linear-gradient(180deg, rgba(18,24,33,1) 0%, rgba(16,21,29,1) 100%);
+      box-shadow: var(--shadow);
+    }
+
+    .cluster-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      background: rgba(255,255,255,0.03);
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+
+    .cluster-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .cluster-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: var(--blue);
+      box-shadow: 0 0 14px rgba(79,163,255,.6);
+    }
+
+    .cluster-sub {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 500;
+      margin-top: 3px;
+    }
+
+    .cluster-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .pair-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      padding: 12px;
+    }
+
+    .pair-card {
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(18,24,33,1) 0%, rgba(23,31,43,1) 100%);
+      border-radius: 16px;
+      overflow: hidden;
+      min-width: 0;
+    }
+
+    .pair-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+
+    .pair-head-left h3 {
+      margin: 0;
+      font-size: 16px;
+      letter-spacing: -0.02em;
+    }
+
+    .pair-head-left p {
+      margin: 3px 0 0;
+      color: var(--muted);
+      font-size: 11px;
+      word-break: break-all;
+    }
+
+    .pair-actions {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .pair-body {
+      display: grid;
+      grid-template-columns: 1fr;
+      min-width: 0;
+    }
+
+    .chart-wrap {
+      min-height: 220px;
+      background: #0c1118;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .chart-inner {
+      width: 100%;
+      height: 220px;
+    }
+
+    .side-panel {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .section {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .section h4 {
+      margin: 0;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--muted);
+    }
+
+    .status-row {
+      display: grid;
+      gap: 8px;
+    }
+
+    .check-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: center;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 8px;
+      background: rgba(255,255,255,0.02);
+    }
+
+    .check-row input[type="text"] {
+      min-height: 34px;
+      padding: 8px 10px;
+      font-size: 12px;
+    }
+
+    .toggle-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 64px);
+      gap: 6px;
+      justify-content: end;
+    }
+
+    .toggle-btn {
+      width: 64px;
+      min-width: 0;
+      min-height: 34px;
+      padding: 7px 8px;
+      border-radius: 10px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-weight: 700;
+      font-size: 12px;
+    }
+
+    .toggle-btn.active.yes {
+      background: rgba(30,203,129,.12);
+      border-color: rgba(30,203,129,.45);
+      color: var(--green);
+    }
+
+    .toggle-btn.active.no {
+      background: rgba(255,93,93,.12);
+      border-color: rgba(255,93,93,.45);
+      color: var(--red);
+    }
+
+    .toggle-btn.active.wait {
+      background: rgba(255,181,71,.12);
+      border-color: rgba(255,181,71,.45);
+      color: var(--amber);
+    }
+
+    .pill-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: 999px;
+      padding: 6px 9px;
+      font-size: 11px;
+      background: rgba(255,255,255,0.02);
+    }
+
+    .pill.good {
+      color: var(--green);
+      border-color: rgba(30,203,129,.35);
+      background: rgba(30,203,129,.08);
+    }
+
+    .pill.bad {
+      color: var(--red);
+      border-color: rgba(255,93,93,.35);
+      background: rgba(255,93,93,.08);
+    }
+
+    .pill.wait {
+      color: var(--amber);
+      border-color: rgba(255,181,71,.35);
+      background: rgba(255,181,71,.08);
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .level-grid {
+      display: grid;
+      gap: 8px;
+    }
+
+    .level-row {
+      display: grid;
+      grid-template-columns: 62px 1fr 1fr;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .level-tag {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    .mini-note {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.45;
+    }
+
+    .small-card {
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.02);
+      border-radius: 12px;
+      padding: 10px;
+    }
+
+    .small-card .label {
+      color: var(--muted);
+      font-size: 11px;
+      margin-bottom: 5px;
+    }
+
+    .small-card .value {
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      word-break: break-word;
+    }
+
+    .footer-note {
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    @media (max-width: 1380px) {
+      .pair-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 860px) {
+      .pair-grid, .grid-2 { grid-template-columns: 1fr; }
+      .toggle-grid { grid-template-columns: repeat(3, 1fr); justify-content: stretch; }
+      .check-row { grid-template-columns: 1fr; }
+      .level-row { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 640px) {
+      .app { padding: 10px; }
+      .top-actions > * { flex: 1 1 auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="header">
+      <div class="title-wrap">
+        <h1>Cluster Trading Dashboard</h1>
+        <p>More compact layout, cleaner checklist rows, and manual pair adding. Each card is smaller so you can scan more pairs at once and still jump to your own TradingView chart.</p>
+      </div>
+      <div class="top-actions">
+        <button class="primary-btn" id="notifyBtn">Enable Browser Alerts</button>
+        <button class="secondary-btn" id="addClusterBtn">Add Cluster</button>
+        <button id="resetBtn" class="danger-btn">Reset Dashboard</button>
+      </div>
+    </div>
+
+    <div class="notice">
+      I changed the chart area to a simpler compact TradingView embed with the toolbar hidden, because the old one was probably what felt “weird”. Your own drawn charts still won’t show inside plain HTML, so use the chart link button to open your personal TradingView layout.
+    </div>
+
+    <div id="clustersRoot"></div>
+
+    <div class="footer-note">
+      Tip: if you want to scan even faster, keep only your active pairs in the dashboard and use the chart link button for deep review.
+    </div>
+  </div>
+
+  <script>
+    const storageKey = 'cluster-trading-dashboard-v3';
+
+    const defaultChecklist = ['Retest', 'At level', 'Daily close'];
+
+    const defaultData = {
+      clusters: [
+        {
+          name: 'Dollar Majors',
+          pairs: [
+            makePair('AUDUSD', 'OANDA:AUDUSD', 'forex'),
+            makePair('EURUSD', 'OANDA:EURUSD', 'forex'),
+            makePair('USDCHF', 'OANDA:USDCHF', 'forex')
+          ]
+        },
+        {
+          name: 'Yen Pairs',
+          pairs: [
+            makePair('EURJPY', 'OANDA:EURJPY', 'forex_jpy'),
+            makePair('USDJPY', 'OANDA:USDJPY', 'forex_jpy'),
+            makePair('GBPJPY', 'OANDA:GBPJPY', 'forex_jpy'),
+            makePair('AUDJPY', 'OANDA:AUDJPY', 'forex_jpy')
+          ]
+        },
+        {
+          name: 'Commodity Currencies',
+          pairs: [
+            makePair('AUDCHF', 'OANDA:AUDCHF', 'forex'),
+            makePair('NZDUSD', 'OANDA:NZDUSD', 'forex')
+          ]
+        },
+        {
+          name: 'Gold and Safe Havens',
+          pairs: [
+            makePair('XAUUSD', 'FOREXCOM:XAUUSD', 'gold')
+          ]
+        },
+        {
+          name: 'Indices',
+          pairs: [
+            makePair('NAS100', 'OANDA:NAS100USD', 'index'),
+            makePair('US30', 'OANDA:US30USD', 'index')
+          ]
+        }
+      ]
+    };
+
+    function makePair(name, symbol, type) {
+      return {
+        name,
+        symbol,
+        type,
+        timeframe: '240',
+        chartLink: '',
+        currentPrice: '',
+        notes: '',
+        checklist: defaultChecklist.map(label => ({ label, value: 'Waiting' })),
+        levels: [
+          { label: 'L1', price: '', side: '' },
+          { label: 'L2', price: '', side: '' },
+          { label: 'L3', price: '', side: '' },
+          { label: 'L4', price: '', side: '' }
+        ],
+        alertedNear: {},
+        alertedAt: {}
+      };
+    }
+
+    let data = loadData();
+
+    function structuredFallback(obj) {
+      return JSON.parse(JSON.stringify(obj));
+    }
+
+    function loadData() {
+      try {
+        const raw = localStorage.getItem(storageKey);
+        if (!raw) return structuredFallback(defaultData);
+        const parsed = JSON.parse(raw);
+        if (!parsed?.clusters?.length) return structuredFallback(defaultData);
+        parsed.clusters.forEach(cluster => {
+          cluster.pairs.forEach(pair => {
+            if (!Array.isArray(pair.checklist)) pair.checklist = defaultChecklist.map(label => ({ label, value: 'Waiting' }));
+            if (!Array.isArray(pair.levels)) pair.levels = [{ label:'L1', price:'', side:'' }, { label:'L2', price:'', side:'' }, { label:'L3', price:'', side:'' }, { label:'L4', price:'', side:'' }];
+            if (!pair.alertedNear) pair.alertedNear = {};
+            if (!pair.alertedAt) pair.alertedAt = {};
+          });
+        });
+        return parsed;
+      } catch {
+        return structuredFallback(defaultData);
+      }
+    }
+
+    function saveData() {
+      localStorage.setItem(storageKey, JSON.stringify(data));
+    }
+
+    function statusClass(value) {
+      if (value === 'Yes') return 'good';
+      if (value === 'No') return 'bad';
+      return 'wait';
+    }
+
+    function overallStatus(pair) {
+      const values = pair.checklist.map(item => item.value);
+      if (values.length && values.every(v => v === 'Yes')) return 'Ready';
+      if (values.some(v => v === 'No')) return 'Invalid';
+      return 'Waiting';
+    }
+
+    function pipDistance(pairType, currentPrice, levelPrice) {
+      const diff = Math.abs(Number(currentPrice) - Number(levelPrice));
+      if (!Number.isFinite(diff)) return null;
+      if (pairType === 'forex') return diff / 0.0001;
+      if (pairType === 'forex_jpy') return diff / 0.01;
+      return null;
+    }
+
+    function nearText(pair, levelPrice) {
+      if (!pair.currentPrice || !levelPrice) return '—';
+      const pips = pipDistance(pair.type, pair.currentPrice, levelPrice);
+      if (pips === null) return 'Manual check';
+      return `${pips.toFixed(1)} pips away`;
+    }
+
+    function levelState(pair, levelPrice) {
+      if (!pair.currentPrice || !levelPrice) return { text: 'No price', cls: 'wait' };
+      const current = Number(pair.currentPrice);
+      const level = Number(levelPrice);
+      if (!Number.isFinite(current) || !Number.isFinite(level)) return { text: 'No price', cls: 'wait' };
+
+      if (pair.type === 'forex' || pair.type === 'forex_jpy') {
+        const pips = pipDistance(pair.type, current, level);
+        if (pips <= 0.2) return { text: 'At level', cls: 'good' };
+        if (pips <= 20) return { text: 'Near level', cls: 'wait' };
+        return { text: `${pips.toFixed(1)} pips`, cls: 'wait' };
+      }
+
+      const diff = Math.abs(current - level);
+      if (diff <= 0.2) return { text: 'At level', cls: 'good' };
+      return { text: `${diff.toFixed(2)} away`, cls: 'wait' };
+    }
+
+    function maybeNotify(pair) {
+      if (!('Notification' in window) || Notification.permission !== 'granted') return;
+      if (!pair.currentPrice) return;
+
+      pair.levels.forEach((lvl, levelIndex) => {
+        if (!lvl.price) return;
+        const current = Number(pair.currentPrice);
+        const level = Number(lvl.price);
+        if (!Number.isFinite(current) || !Number.isFinite(level)) return;
+
+        if (pair.type === 'forex' || pair.type === 'forex_jpy') {
+          const pips = pipDistance(pair.type, current, level);
+          if (pips <= 20 && !pair.alertedNear[levelIndex]) {
+            new Notification(`${pair.name}: near ${lvl.label}`, {
+              body: `Price is ${pips.toFixed(1)} pips away from ${lvl.label} (${lvl.price}).`
+            });
+            pair.alertedNear[levelIndex] = true;
+            saveData();
+          }
+          if (pips <= 0.2 && !pair.alertedAt[levelIndex]) {
+            new Notification(`${pair.name}: at ${lvl.label}`, {
+              body: `Price is at ${lvl.label} (${lvl.price}).`
+            });
+            pair.alertedAt[levelIndex] = true;
+            saveData();
+          }
+          if (pips > 20) pair.alertedNear[levelIndex] = false;
+          if (pips > 0.2) pair.alertedAt[levelIndex] = false;
+        }
+      });
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function updateTextField(clusterIndex, pairIndex, field, value) {
+      data.clusters[clusterIndex].pairs[pairIndex][field] = value;
+      saveData();
+    }
+
+    function updateCurrentPrice(clusterIndex, pairIndex, value) {
+      const pair = data.clusters[clusterIndex].pairs[pairIndex];
+      pair.currentPrice = value;
+      maybeNotify(pair);
+      saveData();
+      render();
+    }
+
+    function updateLevel(clusterIndex, pairIndex, levelIndex, field, value) {
+      data.clusters[clusterIndex].pairs[pairIndex].levels[levelIndex][field] = value;
+      saveData();
+      render();
+    }
+
+    function updateChecklistLabel(clusterIndex, pairIndex, itemIndex, value) {
+      data.clusters[clusterIndex].pairs[pairIndex].checklist[itemIndex].label = value;
+      saveData();
+    }
+
+    function toggleChecklist(clusterIndex, pairIndex, itemIndex, value) {
+      data.clusters[clusterIndex].pairs[pairIndex].checklist[itemIndex].value = value;
+      saveData();
+      render();
+    }
+
+    function addChecklistItem(clusterIndex, pairIndex) {
+      data.clusters[clusterIndex].pairs[pairIndex].checklist.push({ label: 'New item', value: 'Waiting' });
+      saveData();
+      render();
+    }
+
+    function removeChecklistItem(clusterIndex, pairIndex, itemIndex) {
+      data.clusters[clusterIndex].pairs[pairIndex].checklist.splice(itemIndex, 1);
+      saveData();
+      render();
+    }
+
+    function addPair(clusterIndex) {
+      const name = prompt('Pair name, e.g. EURCHF');
+      if (!name) return;
+      const symbol = prompt('TradingView symbol, e.g. OANDA:EURCHF', name.includes(':') ? name : `OANDA:${name}`);
+      if (!symbol) return;
+      const type = prompt('Type: forex / forex_jpy / gold / index', 'forex');
+      data.clusters[clusterIndex].pairs.push(makePair(name.toUpperCase(), symbol.toUpperCase(), (type || 'forex').toLowerCase()));
+      saveData();
+      render();
+    }
+
+    function removePair(clusterIndex, pairIndex) {
+      data.clusters[clusterIndex].pairs.splice(pairIndex, 1);
+      saveData();
+      render();
+    }
+
+    function addCluster() {
+      const name = prompt('Cluster name');
+      if (!name) return;
+      data.clusters.push({ name, pairs: [] });
+      saveData();
+      render();
+    }
+
+    function removeCluster(clusterIndex) {
+      if (!confirm('Delete this whole cluster?')) return;
+      data.clusters.splice(clusterIndex, 1);
+      saveData();
+      render();
+    }
+
+    function openChart(link, symbol) {
+      if (link && link.trim()) window.open(link.trim(), '_blank');
+      else window.open(`https://www.tradingview.com/chart/?symbol=${encodeURIComponent(symbol)}`, '_blank');
+    }
+
+    function createToggleGroup(clusterIndex, pairIndex, itemIndex, value) {
+      const options = ['Yes', 'Waiting', 'No'];
+      return `
+        <div class="toggle-grid">
+          ${options.map(option => `
+            <button class="toggle-btn ${value === option ? `active ${option === 'Yes' ? 'yes' : option === 'No' ? 'no' : 'wait'}` : ''}" onclick="toggleChecklist(${clusterIndex}, ${pairIndex}, ${itemIndex}, '${option}')">${option}</button>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function render() {
+      const root = document.getElementById('clustersRoot');
+      root.innerHTML = data.clusters.map((cluster, clusterIndex) => `
+        <section class="cluster">
+          <div class="cluster-header">
+            <div>
+              <div class="cluster-title"><span class="cluster-dot"></span>${escapeHtml(cluster.name)}</div>
+              <div class="cluster-sub">${cluster.pairs.length} pair${cluster.pairs.length === 1 ? '' : 's'}</div>
+            </div>
+            <div class="cluster-actions">
+              <button class="secondary-btn" onclick="addPair(${clusterIndex})">Add Pair</button>
+              <button class="danger-btn" onclick="removeCluster(${clusterIndex})">Delete Cluster</button>
+            </div>
+          </div>
+
+          <div class="pair-grid">
+            ${cluster.pairs.map((pair, pairIndex) => {
+              const chartId = `tv_chart_${clusterIndex}_${pairIndex}`;
+              return `
+                <div class="pair-card">
+                  <div class="pair-header">
+                    <div class="pair-head-left">
+                      <h3>${escapeHtml(pair.name)}</h3>
+                      <p>${escapeHtml(pair.symbol)}</p>
+                    </div>
+                    <div class="pair-actions">
+                      <button onclick="openChart(${JSON.stringify(pair.chartLink || '')}, ${JSON.stringify(pair.symbol)})">Open Chart</button>
+                      <button class="danger-btn" onclick="removePair(${clusterIndex}, ${pairIndex})">Delete</button>
+                    </div>
+                  </div>
+
+                  <div class="pair-body">
+                    <div class="chart-wrap"><div id="${chartId}" class="chart-inner"></div></div>
+                    <div class="side-panel">
+                      <div class="section">
+                        <h4>Setup Status</h4>
+                        <div class="pill-row">
+                          <div class="pill ${statusClass(overallStatus(pair) === 'Ready' ? 'Yes' : overallStatus(pair) === 'Invalid' ? 'No' : 'Waiting')}">${overallStatus(pair)}</div>
+                          <div class="pill">${escapeHtml(pair.type.replace('_', ' '))}</div>
+                        </div>
+                      </div>
+
+                      <div class="section">
+                        <h4>Checklist</h4>
+                        <div class="status-row">
+                          ${pair.checklist.map((item, itemIndex) => `
+                            <div class="check-row">
+                              <input type="text" value="${escapeHtml(item.label)}" oninput="updateChecklistLabel(${clusterIndex}, ${pairIndex}, ${itemIndex}, this.value)" />
+                              <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap; justify-content:end;">
+                                ${createToggleGroup(clusterIndex, pairIndex, itemIndex, item.value)}
+                                <button class="danger-btn" onclick="removeChecklistItem(${clusterIndex}, ${pairIndex}, ${itemIndex})">✕</button>
+                              </div>
+                            </div>
+                          `).join('')}
+                        </div>
+                        <button class="secondary-btn" onclick="addChecklistItem(${clusterIndex}, ${pairIndex})">Add Checklist Item</button>
+                      </div>
+
+                      <div class="section">
+                        <h4>Chart / Price</h4>
+                        <div class="grid-2">
+                          <input value="${escapeHtml(pair.chartLink || '')}" placeholder="Your TradingView link" oninput="updateTextField(${clusterIndex}, ${pairIndex}, 'chartLink', this.value)" />
+                          <input type="number" step="any" value="${escapeHtml(pair.currentPrice || '')}" placeholder="Current price" oninput="updateCurrentPrice(${clusterIndex}, ${pairIndex}, this.value)" />
+                        </div>
+                        <div class="mini-note">Compact chart for quick scan. Use your personal TradingView link for full markup.</div>
+                      </div>
+
+                      <div class="section">
+                        <h4>Levels</h4>
+                        <div class="level-grid">
+                          ${pair.levels.map((lvl, levelIndex) => {
+                            const state = levelState(pair, lvl.price);
+                            return `
+                              <div class="level-row">
+                                <div class="level-tag">${escapeHtml(lvl.label)}</div>
+                                <input type="number" step="any" value="${escapeHtml(lvl.price || '')}" placeholder="Price" oninput="updateLevel(${clusterIndex}, ${pairIndex}, ${levelIndex}, 'price', this.value)" />
+                                <input value="${escapeHtml(lvl.side || '')}" placeholder="Purpose / side" oninput="updateLevel(${clusterIndex}, ${pairIndex}, ${levelIndex}, 'side', this.value)" />
+                                <div class="pill ${state.cls}">${state.text}</div>
+                                <div class="mini-note">${lvl.price ? nearText(pair, lvl.price) : 'Set a price level'}</div>
+                              </div>
+                            `;
+                          }).join('')}
+                        </div>
+                      </div>
+
+                      <div class="section">
+                        <h4>Notes</h4>
+                        <textarea placeholder="Thesis, invalidation, session, cluster note..." oninput="updateTextField(${clusterIndex}, ${pairIndex}, 'notes', this.value)">${escapeHtml(pair.notes || '')}</textarea>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </section>
+      `).join('');
+
+      loadTradingViewCharts();
+    }
+
+    function loadTradingViewCharts() {
+      if (typeof TradingView === 'undefined') return;
+
+      data.clusters.forEach((cluster, clusterIndex) => {
+        cluster.pairs.forEach((pair, pairIndex) => {
+          const containerId = `tv_chart_${clusterIndex}_${pairIndex}`;
+          const el = document.getElementById(containerId);
+          if (!el) return;
+          el.innerHTML = '';
+
+          new TradingView.widget({
+            autosize: true,
+            symbol: pair.symbol,
+            interval: pair.timeframe,
+            timezone: 'Europe/London',
+            theme: 'dark',
+            style: '1',
+            locale: 'en',
+            toolbar_bg: '#0b0f14',
+            enable_publishing: false,
+            hide_top_toolbar: true,
+            hide_side_toolbar: true,
+            allow_symbol_change: false,
+            withdateranges: false,
+            details: false,
+            hotlist: false,
+            calendar: false,
+            save_image: false,
+            studies: [],
+            container_id: containerId,
+            backgroundColor: '#0b0f14',
+            gridColor: 'rgba(42, 46, 57, 0.30)'
+          });
+        });
+      });
+    }
+
+    document.getElementById('notifyBtn').addEventListener('click', async () => {
+      if (!('Notification' in window)) {
+        alert('Browser notifications are not supported on this device/browser.');
+        return;
+      }
+      const permission = await Notification.requestPermission();
+      alert(permission === 'granted' ? 'Browser alerts enabled.' : 'Notifications were not allowed.');
+    });
+
+    document.getElementById('addClusterBtn').addEventListener('click', addCluster);
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      const ok = confirm('Reset the whole dashboard back to default pairs and empty levels?');
+      if (!ok) return;
+      data = structuredFallback(defaultData);
+      saveData();
+      render();
+    });
+
+    render();
+  </script>
+  <script src="https://s3.tradingview.com/tv.js"></script>
+</body>
+</html>
